@@ -1,0 +1,161 @@
+services:
+  dbx-openai-proxy:
+    build:
+      context: ..
+      dockerfile: infra/dbx-openai-proxy.Dockerfile
+    env_file:
+      - ../.env
+    environment:
+      - DBX_OPENAI_PROXY_PORT=9000
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  skyvern-postgres:
+    image: postgres:14-alpine
+    restart: always
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_USER=skyvern
+      - POSTGRES_PASSWORD=skyvern
+      - POSTGRES_DB=skyvern
+    volumes:
+      - ../data/skyvern-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U skyvern"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  control-plane:
+    build:
+      context: ..
+      dockerfile: infra/control-plane.Dockerfile
+    env_file:
+      - ../.env
+    environment:
+      - CONTROL_PLANE_DATABASE_URL=sqlite:////app/data/control_plane.db
+      - SKYVERN_BASE_URL=http://skyvern:8000
+      - CONTROL_PLANE_PUBLIC_BASE_URL=http://control-plane:8010
+      - TEMPORAL_SIGNAL_ENABLED=true
+      - TEMPORAL_TARGET_HOST=temporal:7233
+    ports:
+      - "8010:8010"
+    volumes:
+      - ../data:/app/data
+      - ../artifacts:/app/artifacts
+      - ../uploads:/app/uploads
+      - ../../fake-survey-form:/app/fake-survey-form
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8010/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  # Dev server with embedded SQLite (Temporal CLI image). Do not use temporalio/auto-setup
+  # here: auto-setup loads Cassandra-backed docker.yaml and exits when overriding start-dev.
+  temporal:
+    image: temporalio/temporal:latest
+    restart: unless-stopped
+    command: ["server", "start-dev", "--ip", "0.0.0.0"]
+    ports:
+      - "7233:7233"
+
+  temporal-ui:
+    image: temporalio/ui:2.39.0
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+    ports:
+      - "8233:8080"
+    depends_on:
+      - temporal
+
+  temporal-worker:
+    build:
+      context: ..
+      dockerfile: infra/control-plane.Dockerfile
+    env_file:
+      - ../.env
+    environment:
+      - CONTROL_PLANE_DATABASE_URL=sqlite:////app/data/control_plane.db
+      - SKYVERN_BASE_URL=http://skyvern:8000
+      - CONTROL_PLANE_PUBLIC_BASE_URL=http://control-plane:8010
+      - TEMPORAL_TARGET_HOST=temporal:7233
+      - TEMPORAL_NAMESPACE=default
+    command: ["python", "-m", "apps.temporal_worker.worker"]
+    volumes:
+      - ../data:/app/data
+    depends_on:
+      control-plane:
+        condition: service_healthy
+      temporal:
+        condition: service_started
+
+  skyvern:
+    image: public.ecr.aws/skyvern/skyvern:latest
+    platform: linux/amd64
+    restart: on-failure
+    env_file:
+      - ../.env
+    environment:
+      - DATABASE_STRING=postgresql+psycopg://skyvern:skyvern@skyvern-postgres:5432/skyvern
+      - BROWSER_TYPE=${BROWSER_TYPE:-chromium-headful}
+      - BROWSER_REMOTE_DEBUGGING_URL=${BROWSER_REMOTE_DEBUGGING_URL:-}
+      - CHROME_EXECUTABLE_PATH=${CHROME_EXECUTABLE_PATH:-}
+      - BROWSER_TIMEZONE=${BROWSER_TIMEZONE:-America/Los_Angeles}
+      - BROWSER_LOCALE=${BROWSER_LOCALE:-en-US}
+      - ENABLE_CODE_BLOCK=true
+      # Force Skyvern to use Databricks Claude Sonnet 4.6 via OpenAI-compatible routing.
+      - ENABLE_OPENAI_COMPATIBLE=true
+      - OPENAI_COMPATIBLE_MODEL_KEY=DATABRICKS_CLAUDE_SONNET_46
+      - OPENAI_COMPATIBLE_API_BASE=http://dbx-openai-proxy:9000
+      - OPENAI_COMPATIBLE_API_KEY=proxy-managed
+      - LLM_KEY=DATABRICKS_CLAUDE_SONNET_46
+    ports:
+      - "8000:8000"
+      - "6080:6080"
+      - "9223:9222"
+    volumes:
+      - ../data/skyvern:/data/skyvern
+      - ../artifacts:/data/artifacts
+      - ../videos:/data/videos
+      - ../har:/data/har
+      - ../log:/data/log
+      - ../.streamlit:/app/.streamlit
+    depends_on:
+      skyvern-postgres:
+        condition: service_healthy
+      dbx-openai-proxy:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "test", "-f", "/app/.streamlit/secrets.toml"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  skyvern-ui:
+    image: public.ecr.aws/skyvern/skyvern-ui:latest
+    platform: linux/amd64
+    restart: on-failure
+    env_file:
+      - ../skyvern-frontend/.env
+    ports:
+      - "8080:8080"
+      - "9090:9090"
+    volumes:
+      - ../artifacts:/data/artifacts
+      - ../videos:/data/videos
+      - ../har:/data/har
+      - ../.streamlit:/app/.streamlit
+    depends_on:
+      skyvern:
+        condition: service_started
+
+  fake-form:
+    image: nginx:1.27-alpine
+    ports:
+      - "8088:80"
+    volumes:
+      - ../../fake-survey-form:/usr/share/nginx/html:ro

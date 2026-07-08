@@ -1,0 +1,37 @@
+# macOS / editor noise
+.DS_Store
+*.swp
+*.swo
+
+# Local indexes and agent caches
+.codegraph/
+
+# Python generated files
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# Local environments and secrets
+.env
+.env.*
+!.env.example
+survey-automation/.env
+survey-automation/.streamlit/secrets.toml
+survey-automation/skyvern-frontend/.env
+
+# Runtime data and generated artifacts
+fake-survey-form/fake-survey-form-data.json
+survey-automation/.venv/
+survey-automation/data/
+survey-automation/artifacts/
+survey-automation/videos/
+survey-automation/har/
+survey-automation/log/
+survey-automation/uploads/
+
+# Local downloaded survey/reference files. Keep them locally, do not publish them by default.
+2027 Best Colleges - Main Survey*.html
+download-enrollment-status.doc

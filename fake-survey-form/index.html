@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fake Survey Portal - Test Form</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-badge">FAKE</div>
+        <div>
+          <h1>Survey Portal</h1>
+          <p>Automation Test Sandbox</p>
+        </div>
+      </div>
+
+      <div class="run-panel card">
+        <div class="row-between">
+          <span class="label">Run Status</span>
+          <span id="runStatus" class="pill pill-draft" data-testid="run-status">Draft</span>
+        </div>
+        <div class="progress-wrap">
+          <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
+          <small id="progressText">0 / 9 sections reviewed</small>
+        </div>
+        <div class="button-stack">
+          <button id="saveDraftTop" class="secondary" data-testid="save-draft-top">Save Draft</button>
+          <button id="exportJsonTop" class="secondary" data-testid="export-json-top">Export JSON</button>
+          <button id="resetFormTop" class="danger" data-testid="reset-form-top">Reset</button>
+        </div>
+      </div>
+
+      <nav class="section-nav card" aria-label="Survey sections">
+        <button class="nav-link active" data-target="institution" data-testid="nav-institution">1. Institution</button>
+        <button class="nav-link" data-target="admissions" data-testid="nav-admissions">2. Admissions</button>
+        <button class="nav-link" data-target="enrollment" data-testid="nav-enrollment">3. Enrollment</button>
+        <button class="nav-link" data-target="background" data-testid="nav-background">4. Student Background</button>
+        <button class="nav-link" data-target="faculty" data-testid="nav-faculty">5. Faculty</button>
+        <button class="nav-link" data-target="graduation" data-testid="nav-graduation">6. Graduation</button>
+        <button class="nav-link" data-target="alumni" data-testid="nav-alumni">7. Alumni</button>
+        <button class="nav-link" data-target="assessment" data-testid="nav-assessment">8. Assessment</button>
+        <button class="nav-link" data-target="verification" data-testid="nav-verification">9. Verification</button>
+      </nav>
+
+      <div class="card tip-box">
+        <h3>Automation-friendly selectors</h3>
+        <p>Stable <code>data-testid</code> attributes are attached to key fields, actions, section nav items, and state badges.</p>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar card">
+        <div>
+          <h2>Fake Best Colleges-Style Survey</h2>
+          <p>Representative survey built from uploaded survey questions and extracted answers for automation testing. Prefilled with sample values from the uploaded reference document.</p>
+        </div>
+        <div class="topbar-actions">
+          <button id="saveDraft" class="secondary" data-testid="save-draft">Save Draft</button>
+          <button id="markReadyForReview" class="primary" data-testid="mark-ready-for-review">Mark Ready for Review</button>
+        </div>
+      </header>
+
+      <form id="surveyForm">
+        <section id="institution" class="survey-section active" data-section-title="Institution Profile">
+          <div class="section-header">
+            <div>
+              <h3>Institution Profile</h3>
+              <p>Identity, contact, classification, and institutional description.</p>
+            </div>
+            <span class="section-tag">Required</span>
+          </div>
+
+          <div class="grid two-col">
+            <label>
+              <span>Institution name *</span>
+              <input type="text" name="institution_name" value="California State University--Long Beach" required data-testid="institution-name" />
+            </label>
+            <label>
+              <span>Display name on site</span>
+              <input type="text" name="display_name" placeholder="Leave blank if same" data-testid="display-name" />
+            </label>
+            <label>
+              <span>Mailing address *</span>
+              <input type="text" name="mailing_address" value="1250 Bellflower Boulevard" required data-testid="mailing-address" />
+            </label>
+            <label>
+              <span>City *</span>
+              <input type="text" name="city" value="Long Beach" required data-testid="city" />
+            </label>
+            <label>
+              <span>State *</span>
+              <input type="text" name="state" value="California" required data-testid="state" />
+            </label>
+            <label>
+              <span>ZIP *</span>
+              <input type="text" name="zip" value="90840" required data-testid="zip" />
+            </label>
+            <label>
+              <span>Main phone *</span>
+              <input type="tel" name="main_phone" value="(562) 985-4111" required data-testid="main-phone" />
+            </label>
+            <label>
+              <span>Website *</span>
+              <input type="url" name="homepage" value="http://www.csulb.edu" required data-testid="homepage" />
+            </label>
+          </div>
+
+          <fieldset class="fieldset">
+            <legend>Institutional control *</legend>
+            <div class="choice-row">
+              <label><input type="radio" name="control" value="Public" checked required data-testid="control-public" /> Public</label>
+              <label><input type="radio" name="control" value="Private nonprofit" /> Private (nonprofit)</label>
+              <label><input type="radio" name="control" value="Proprietary" /> Proprietary</label>
+            </div>
+          </fieldset>
+
+          <div class="grid two-col">
+            <label>
+              <span>Founded year *</span>
+              <input type="number" name="founded_year" value="1949" required data-testid="founded-year" />
+            </label>
+            <label>
+              <span>Campus setting *</span>
+              <select name="campus_setting" required data-testid="campus-setting">
+                <option>Urban (located within a major city)</option>
+                <option>City</option>
+                <option>Suburban</option>
+                <option>Rural</option>
+              </select>
+            </label>
+            <label>
+              <span>Institution type *</span>
+              <select name="institution_type" required data-testid="institution-type">
+                <option>Coeducational college</option>
+                <option>Men's college</option>
+                <option>Women's college</option>
+              </select>
+            </label>
+            <label>
+              <span>Academic calendar *</span>
+              <select name="calendar" required data-testid="calendar">
+                <option>Semester</option>
+                <option>Quarter</option>
+                <option>Trimester</option>
+                <option>4-1-4</option>
+              </select>
+            </label>
+          </div>
+
+          <label>
+            <span>Degrees offered</span>
+            <div class="check-grid four-col">
+              <label><input type="checkbox" name="degrees" value="Bachelor's" checked /> Bachelor's</label>
+              <label><input type="checkbox" name="degrees" value="Master's" checked /> Master's</label>
+              <label><input type="checkbox" name="degrees" value="Doctoral research" checked /> Doctoral - research/scholarship</label>
+              <label><input type="checkbox" name="degrees" value="Doctoral professional" checked /> Doctoral - professional practice</label>
+              <label><input type="checkbox" name="degrees" value="Certificate" checked /> Certificate</label>
+              <label><input type="checkbox" name="degrees" value="Post-bacc certificate" checked /> Post-bachelor's certificate</label>
+            </div>
+          </label>
+
+          <label>
+            <span>Unique qualities *</span>
+            <textarea name="unique_qualities" rows="7" required data-testid="unique-qualities">California State University, Long Beach, a vibrant, comprehensive, urban university with an enrollment of nearly 38,000 students, is one of the largest campuses in the California State University system. Located near the ocean, the campus offers a beautifully landscaped setting, broad academic offerings, strong undergraduate and graduate programs, and national recognition for improving graduation rates and reducing opportunity gaps.</textarea>
+          </label>
+        </section>
+
+        <section id="admissions" class="survey-section" data-section-title="Admissions">
+          <div class="section-header">
+            <div>
+              <h3>Admissions</h3>
+              <p>Freshman applications, deadlines, policies, GPA, and test-optional behavior.</p>
+            </div>
+            <span class="section-tag">Required</span>
+          </div>
+
+          <div class="card table-card">
+            <h4>Freshman applications - Fall 2021</h4>
+            <table data-testid="admissions-table">
+              <thead>
+                <tr><th>Metric</th><th>Men</th><th>Women</th><th>Other/Not Reported</th><th>Total</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Applied</td>
+                  <td><input type="number" name="applied_men" value="26399" /></td>
+                  <td><input type="number" name="applied_women" value="40592" /></td>
+                  <td><input type="number" name="applied_other" value="99" /></td>
+                  <td><input type="number" name="applied_total" value="67090" data-testid="applied-total" /></td>
+                </tr>
+                <tr>
+                  <td>Admitted</td>
+                  <td><input type="number" name="admitted_men" value="11573" /></td>
+                  <td><input type="number" name="admitted_women" value="19839" /></td>
+                  <td><input type="number" name="admitted_other" value="36" /></td>
+                  <td><input type="number" name="admitted_total" value="31448" data-testid="admitted-total" /></td>
+                </tr>
+                <tr>
+                  <td>Enrolled first-time first-year</td>
+                  <td><input type="number" name="enrolled_men" value="1885" /></td>
+                  <td><input type="number" name="enrolled_women" value="2971" /></td>
+                  <td><input type="number" name="enrolled_other" value="9" /></td>
+                  <td><input type="number" name="enrolled_total" value="4865" data-testid="enrolled-total" /></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="grid two-col">
+            <label>
+              <span>Application closing date</span>
+              <input type="text" name="application_close_date" value="11/30" data-testid="application-close-date" />
+            </label>
+            <label>
+              <span>Admission notification begins</span>
+              <input type="text" name="admission_notification" value="02/15" data-testid="admission-notification" />
+            </label>
+            <label>
+              <span>Reply deadline</span>
+              <input type="text" name="reply_deadline" value="05/01" data-testid="reply-deadline" />
+            </label>
+            <label>
+              <span>Application fee</span>
+              <input type="number" name="application_fee" value="55" data-testid="application-fee" />
+            </label>
+          </div>
+
+          <fieldset class="fieldset">
+            <legend>Test policy</legend>
+            <div class="choice-row wrap">
+              <label><input type="radio" name="test_policy" value="Test flexible" /> Test flexible</label>
+              <label><input type="radio" name="test_policy" value="Test optional" checked data-testid="test-policy-optional" /> Test optional</label>
+              <label><input type="radio" name="test_policy" value="Test optional international" /> Test optional only for international applicants</label>
+              <label><input type="radio" name="test_policy" value="Test blind" /> Test blind</label>
+              <label><input type="radio" name="test_policy" value="Test blind exceptions" /> Test blind with exceptions</label>
+            </div>
+          </fieldset>
+
+          <div class="grid two-col">
+            <label>
+              <span>Average high school GPA</span>
+              <input type="number" step="0.1" name="avg_hs_gpa" value="3.7" data-testid="avg-hs-gpa" />
+            </label>
+            <label>
+              <span>Percent submitting GPA</span>
+              <input type="number" step="1" name="pct_submit_gpa" value="100" data-testid="pct-submit-gpa" />
+            </label>
+            <label>
+              <span>GPA 25th percentile</span>
+              <input type="number" step="0.1" name="gpa_25" value="3.5" data-testid="gpa-25" />
+            </label>
+            <label>
+              <span>GPA 75th percentile</span>
+              <input type="number" step="0.1" name="gpa_75" value="4.0" data-testid="gpa-75" />
+            </label>
+          </div>
+
+          <label>
+            <span>Test policy clarification</span>
+            <textarea name="test_policy_note" rows="4" data-testid="test-policy-note">The California State University has temporarily suspended the use of ACT/SAT examinations in determining admission eligibility for all CSU campuses.</textarea>
+          </label>
+        </section>
+
+        <section id="enrollment" class="survey-section" data-section-title="Enrollment">
+          <div class="section-header">
+            <div>
+              <h3>Enrollment</h3>
+              <p>Full-time and part-time grids, totals, ethnicity, and first-generation metrics.</p>
+            </div>
+            <span class="section-tag">Rankings Critical</span>
+          </div>
+
+          <div class="card table-card">
+            <h4>2021 Full-time Enrollment</h4>
+            <table>
+              <thead>
+                <tr><th>Category</th><th>Men</th><th>Women</th><th>Other</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Degree-seeking, first-time freshman</td>
+                  <td><input type="number" name="ft_ftf_men" value="1831" /></td>
+                  <td><input type="number" name="ft_ftf_women" value="2895" /></td>
+                  <td><input type="number" name="ft_ftf_other" value="0" /></td>
+                </tr>
+                <tr>
+                  <td>Other first-year degree-seeking</td>
+                  <td><input type="number" name="ft_otherfy_men" value="476" /></td>
+                  <td><input type="number" name="ft_otherfy_women" value="605" /></td>
+                  <td><input type="number" name="ft_otherfy_other" value="0" /></td>
+                </tr>
+                <tr>
+                  <td>All other degree-seeking</td>
+                  <td><input type="number" name="ft_allother_men" value="9320" /></td>
+                  <td><input type="number" name="ft_allother_women" value="13062" /></td>
+                  <td><input type="number" name="ft_allother_other" value="0" /></td>
+                </tr>
+                <tr>
+                  <td>Total undergraduates</td>
+                  <td><input type="number" name="ft_total_ug_men" value="11627" /></td>
+                  <td><input type="number" name="ft_total_ug_women" value="16562" /></td>
+                  <td><input type="number" name="ft_total_ug_other" value="0" /></td>
+                </tr>
+                <tr>
+                  <td>Total graduates</td>
+                  <td><input type="number" name="ft_total_grad_men" value="1271" /></td>
+                  <td><input type="number" name="ft_total_grad_women" value="2299" /></td>
+                  <td><input type="number" name="ft_total_grad_other" value="0" /></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card table-card">
+            <h4>2021 Part-time Enrollment</h4>
+            <table>
+              <thead>
+                <tr><th>Category</th><th>Men</th><th>Women</th><th>Other</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Degree-seeking, first-time freshman</td>
+                  <td><input type="number" name="pt_ftf_men" value="56" /></td>
+                  <td><input type="number" name="pt_ftf_women" value="77" /></td>
+                  <td><input type="number" name="pt_ftf_other" value="0" /></td>
+                </tr>
+                <tr>
+                  <td>Other first-year degree-seeking</td>
+                  <td><input type="number" name="pt_otherfy_men" value="97" /></td>
+                  <td><input type="number" name="pt_otherfy_women" value="98" /></td>
+                  <td><input type="number" name="pt_otherfy_other" value="0" /></td>
+                </tr>
+                <tr>
+                  <td>All other degree-seeking</td>
+                  <td><input type="number" name="pt_allother_men" value="2388" /></td>
+                  <td><input type="number" name="pt_allother_women" value="2700" /></td>
+                  <td><input type="number" name="pt_allother_other" value="0" /></td>
+                </tr>
+                <tr>
+                  <td>Total undergraduates</td>
+                  <td><input type="number" name="pt_total_ug_men" value="2541" /></td>
+                  <td><input type="number" name="pt_total_ug_women" value="2875" /></td>
+                  <td><input type="number" name="pt_total_ug_other" value="0" /></td>
+                </tr>
+                <tr>
+                  <td>Total graduates</td>
+                  <td><input type="number" name="pt_total_grad_men" value="885" /></td>
+                  <td><input type="number" name="pt_total_grad_women" value="1375" /></td>
+                  <td><input type="number" name="pt_total_grad_other" value="0" /></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="grid three-col">
+            <label>
+              <span>Total undergraduates *</span>
+              <input type="number" name="total_undergraduates" value="33605" required data-testid="total-undergraduates" />
+            </label>
+            <label>
+              <span>Total graduates *</span>
+              <input type="number" name="total_graduates" value="5830" required data-testid="total-graduates" />
+            </label>
+            <label>
+              <span>Grand total enrollment *</span>
+              <input type="number" name="grand_total_enrollment" value="39435" required data-testid="grand-total-enrollment" />
+            </label>
+          </div>
+
+          <div class="card table-card">
+            <h4>Ethnicity Grid</h4>
+            <table>
+              <thead>
+                <tr><th>Category</th><th>First-time first-year</th><th>Degree-seeking undergraduates</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Asian</td><td><input type="number" value="1147" /></td><td><input type="number" value="7147" /></td></tr>
+                <tr><td>Black or African American</td><td><input type="number" value="183" /></td><td><input type="number" value="1240" /></td></tr>
+                <tr><td>Hispanic/Latino</td><td><input type="number" value="2478" /></td><td><input type="number" value="15720" /></td></tr>
+                <tr><td>White</td><td><input type="number" value="636" /></td><td><input type="number" value="5319" /></td></tr>
+                <tr><td>Non-resident aliens</td><td><input type="number" value="152" /></td><td><input type="number" value="1892" /></td></tr>
+                <tr><td>Total</td><td><input type="number" value="4865" data-testid="ethnicity-total-ftf" /></td><td><input type="number" value="33605" data-testid="ethnicity-total-ug" /></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="background" class="survey-section" data-section-title="Student Background">
+          <div class="section-header">
+            <div>
+              <h3>Student Background</h3>
+              <p>First-generation, GPA bands, military, and selected student characteristics.</p>
+            </div>
+            <span class="section-tag">Mixed Types</span>
+          </div>
+
+          <div class="grid two-col">
+            <label>
+              <span>First-generation percent - FYFT</span>
+              <input type="number" step="1" name="first_gen_fyft" value="60" data-testid="first-gen-fyft" />
+            </label>
+            <label>
+              <span>First-generation percent - all FT undergrads</span>
+              <input type="number" step="1" name="first_gen_all_ft" value="63" data-testid="first-gen-all-ft" />
+            </label>
+            <label>
+              <span>Military veterans</span>
+              <input type="number" name="military_veterans" value="330" data-testid="military-veterans" />
+            </label>
+            <label>
+              <span>Active service members</span>
+              <input type="number" name="active_service" value="102" data-testid="active-service" />
+            </label>
+          </div>
+
+          <div class="card table-card compact">
+            <h4>High School GPA Distribution</h4>
+            <table>
+              <thead>
+                <tr><th>Band</th><th>Percent</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>4.0</td><td><input type="number" value="25" /></td></tr>
+                <tr><td>3.75 - 3.99</td><td><input type="number" value="26" /></td></tr>
+                <tr><td>3.50 - 3.74</td><td><input type="number" value="22" /></td></tr>
+                <tr><td>3.25 - 3.49</td><td><input type="number" value="14" /></td></tr>
+                <tr><td>3.00 - 3.24</td><td><input type="number" value="9" /></td></tr>
+                <tr><td>2.50 - 2.99</td><td><input type="number" value="4" /></td></tr>
+                <tr><td>Below 2.50</td><td><input type="number" value="0" /></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <fieldset class="fieldset">
+            <legend>GI Bill certified</legend>
+            <div class="choice-row">
+              <label><input type="radio" name="gi_bill" value="Yes" checked data-testid="gi-bill-yes" /> Yes</label>
+              <label><input type="radio" name="gi_bill" value="No" /> No</label>
+            </div>
+          </fieldset>
+
+          <fieldset class="fieldset">
+            <legend>Yellow Ribbon participant</legend>
+            <div class="choice-row">
+              <label><input type="radio" name="yellow_ribbon" value="Yes" /> Yes</label>
+              <label><input type="radio" name="yellow_ribbon" value="No" checked data-testid="yellow-ribbon-no" /> No</label>
+            </div>
+          </fieldset>
+        </section>
+
+        <section id="faculty" class="survey-section" data-section-title="Faculty">
+          <div class="section-header">
+            <div>
+              <h3>Faculty</h3>
+              <p>Counts, student-faculty ratio, diversity, and salary totals.</p>
+            </div>
+            <span class="section-tag">Rankings Critical</span>
+          </div>
+
+          <div class="card table-card">
+            <h4>Instructional Faculty</h4>
+            <table>
+              <thead>
+                <tr><th>Metric</th><th>Full-time</th><th>Part-time</th><th>Total</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Total instructional faculty</td><td><input type="number" value="1018" data-testid="faculty-ft" /></td><td><input type="number" value="1436" data-testid="faculty-pt" /></td><td><input type="number" value="2454" data-testid="faculty-total" /></td></tr>
+                <tr><td>Minority faculty</td><td><input type="number" value="387" /></td><td><input type="number" value="497" /></td><td><input type="number" value="884" /></td></tr>
+                <tr><td>Women</td><td><input type="number" value="537" /></td><td><input type="number" value="780" /></td><td><input type="number" value="1317" /></td></tr>
+                <tr><td>Men</td><td><input type="number" value="480" /></td><td><input type="number" value="652" /></td><td><input type="number" value="1132" /></td></tr>
+                <tr><td>Doctorate or terminal degree</td><td><input type="number" value="828" /></td><td><input type="number" value="590" /></td><td><input type="number" value="1418" /></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="grid three-col">
+            <label>
+              <span>Student-to-faculty ratio</span>
+              <input type="number" step="0.1" name="student_faculty_ratio" value="26" data-testid="student-faculty-ratio" />
+            </label>
+            <label>
+              <span>Based on students</span>
+              <input type="number" name="ratio_students" value="33191" data-testid="ratio-students" />
+            </label>
+            <label>
+              <span>Based on faculty</span>
+              <input type="number" name="ratio_faculty" value="1289" data-testid="ratio-faculty" />
+            </label>
+          </div>
+
+          <div class="card table-card">
+            <h4>Faculty Salaries</h4>
+            <table>
+              <thead>
+                <tr><th>Rank</th><th>Faculty count</th><th>Total contracted salaries ($)</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Professor, 9-month</td><td><input type="number" value="300" /></td><td><input type="number" value="33443556" /></td></tr>
+                <tr><td>Associate professor, 9-month</td><td><input type="number" value="214" /></td><td><input type="number" value="20963160" /></td></tr>
+                <tr><td>Assistant professor, 9-month</td><td><input type="number" value="213" /></td><td><input type="number" value="18364428" /></td></tr>
+                <tr><td>Professor, 11/12-month</td><td><input type="number" value="50" /></td><td><input type="number" value="7112016" /></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card table-card compact">
+            <h4>Undergraduate Class Sections</h4>
+            <table>
+              <thead>
+                <tr><th>Size band</th><th>Count</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>2-9</td><td><input type="number" value="370" /></td></tr>
+                <tr><td>10-19</td><td><input type="number" value="935" /></td></tr>
+                <tr><td>20-29</td><td><input type="number" value="1682" /></td></tr>
+                <tr><td>30-39</td><td><input type="number" value="1377" /></td></tr>
+                <tr><td>40-49</td><td><input type="number" value="368" /></td></tr>
+                <tr><td>50-99</td><td><input type="number" value="170" /></td></tr>
+                <tr><td>100+</td><td><input type="number" value="211" /></td></tr>
+                <tr><td>Total</td><td><input type="number" value="5113" data-testid="class-sections-total" /></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="graduation" class="survey-section" data-section-title="Graduation and Retention">
+          <div class="section-header">
+            <div>
+              <h3>Graduation and Retention</h3>
+              <p>Six-year graduation rates, international graduation rate, and retention.</p>
+            </div>
+            <span class="section-tag">Rankings Critical</span>
+          </div>
+
+          <div class="card table-card">
+            <h4>2015 Cohort Graduation Grid</h4>
+            <table>
+              <thead>
+                <tr><th>Metric</th><th>Pell</th><th>Loan Only</th><th>Neither</th><th>Total</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Initial cohort (A)</td><td><input type="number" value="2262" /></td><td><input type="number" value="492" /></td><td><input type="number" value="1645" /></td><td><input type="number" value="4399" data-testid="grad-a-total" /></td></tr>
+                <tr><td>Allowable exclusions (B)</td><td><input type="number" value="0" /></td><td><input type="number" value="0" /></td><td><input type="number" value="0" /></td><td><input type="number" value="0" /></td></tr>
+                <tr><td>Final cohort (C)</td><td><input type="number" value="2262" /></td><td><input type="number" value="492" /></td><td><input type="number" value="1645" /></td><td><input type="number" name="grad_c_total" value="4399" data-testid="grad-c-total" /></td></tr>
+                <tr><td>Completed in 4 years or less (D)</td><td><input type="number" value="651" /></td><td><input type="number" value="209" /></td><td><input type="number" value="646" /></td><td><input type="number" value="1506" /></td></tr>
+                <tr><td>Completed in 5 years or less (E)</td><td><input type="number" value="830" /></td><td><input type="number" value="132" /></td><td><input type="number" value="509" /></td><td><input type="number" value="1471" /></td></tr>
+                <tr><td>Completed in 6 years or less (F)</td><td><input type="number" value="196" /></td><td><input type="number" value="30" /></td><td><input type="number" value="119" /></td><td><input type="number" value="345" /></td></tr>
+                <tr><td>Total graduating within 6 years (G)</td><td><input type="number" value="1677" /></td><td><input type="number" value="371" /></td><td><input type="number" value="1274" /></td><td><input type="number" name="grad_g_total" value="3322" data-testid="grad-g-total" /></td></tr>
+                <tr><td>Six-year graduation rate (H)</td><td><input type="number" value="74" /></td><td><input type="number" value="75" /></td><td><input type="number" value="77" /></td><td><input type="number" name="grad_rate_total" value="76" data-testid="grad-rate-total" /></td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="grid three-col">
+            <label>
+              <span>International students in cohort C</span>
+              <input type="number" name="intl_cohort_c" value="156" data-testid="intl-cohort-c" />
+            </label>
+            <label>
+              <span>International students in cohort G</span>
+              <input type="number" name="intl_cohort_g" value="106" data-testid="intl-cohort-g" />
+            </label>
+            <label>
+              <span>International six-year graduation rate</span>
+              <input type="number" name="intl_grad_rate" value="68" data-testid="intl-grad-rate" />
+            </label>
+            <label>
+              <span>First-year retention rate</span>
+              <input type="number" name="retention_rate" value="87" data-testid="retention-rate" />
+            </label>
+            <label>
+              <span>Historical retention 2019</span>
+              <input type="number" name="retention_2019" value="89" />
+            </label>
+            <label>
+              <span>International retention rate</span>
+              <input type="number" name="intl_retention_rate" value="84" data-testid="intl-retention-rate" />
+            </label>
+          </div>
+        </section>
+
+        <section id="alumni" class="survey-section" data-section-title="Alumni Giving">
+          <div class="section-header">
+            <div>
+              <h3>Alumni Giving</h3>
+              <p>Alumni of record, solicited, donors, and rate calculation.</p>
+            </div>
+            <span class="section-tag">Rankings Critical</span>
+          </div>
+
+          <div class="grid three-col">
+            <label>
+              <span>Alumni of record (2020-2021)</span>
+              <input type="number" name="alumni_of_record" value="275491" data-testid="alumni-of-record" />
+            </label>
+            <label>
+              <span>Alumni solicited</span>
+              <input type="number" name="alumni_solicited" value="113151" data-testid="alumni-solicited" />
+            </label>
+            <label>
+              <span>Alumni donors</span>
+              <input type="number" name="alumni_donors" value="4551" data-testid="alumni-donors" />
+            </label>
+            <label>
+              <span>Prior year alumni of record</span>
+              <input type="number" name="alumni_of_record_prior" value="267028" data-testid="alumni-of-record-prior" />
+            </label>
+            <label>
+              <span>Prior year alumni donors</span>
+              <input type="number" name="alumni_donors_prior" value="5334" data-testid="alumni-donors-prior" />
+            </label>
+            <label>
+              <span>Calculated giving rate (%)</span>
+              <input type="number" step="0.1" name="alumni_giving_rate" value="1.7" data-testid="alumni-giving-rate" />
+            </label>
+          </div>
+
+          <label>
+            <span>Variance explanation</span>
+            <textarea name="alumni_variance_explanation" rows="4" data-testid="alumni-variance-explanation">These values are accurate.</textarea>
+          </label>
+        </section>
+
+        <section id="assessment" class="survey-section" data-section-title="Assessment">
+          <div class="section-header">
+            <div>
+              <h3>Assessment</h3>
+              <p>Fake QA checks, large changes, and missing data confirmations.</p>
+            </div>
+            <span class="section-tag">Review Gate</span>
+          </div>
+
+          <div class="card assessment-summary">
+            <h4>Automated checks</h4>
+            <ul id="assessmentList" class="assessment-list" data-testid="assessment-list"></ul>
+          </div>
+
+          <div class="card">
+            <h4>Missing current-year SAT / ACT entries</h4>
+            <div class="check-grid two-col">
+              <label><input type="checkbox" name="confirm_missing_sat_pct" data-testid="confirm-missing-sat-pct" /> Confirm no current-year SAT submission percentage entry</label>
+              <label><input type="checkbox" name="confirm_missing_act_pct" data-testid="confirm-missing-act-pct" /> Confirm no current-year ACT submission percentage entry</label>
+              <label><input type="checkbox" name="confirm_missing_sat_percentiles" data-testid="confirm-missing-sat-percentiles" /> Confirm no current-year SAT percentile entries</label>
+              <label><input type="checkbox" name="confirm_missing_act_percentiles" data-testid="confirm-missing-act-percentiles" /> Confirm no current-year ACT percentile entries</label>
+            </div>
+          </div>
+
+          <label>
+            <span>Assessment explanation for test-policy change</span>
+            <textarea name="assessment_test_explanation" rows="5" data-testid="assessment-test-explanation">SAT scores were not required for admission in the current reporting year.</textarea>
+          </label>
+        </section>
+
+        <section id="verification" class="survey-section" data-section-title="Verification and Submission">
+          <div class="section-header">
+            <div>
+              <h3>Verification and Submission</h3>
+              <p>Human review gate and sign-off simulation.</p>
+            </div>
+            <span class="section-tag">Final Gate</span>
+          </div>
+
+          <fieldset class="fieldset">
+            <legend>Verifying administrator *</legend>
+            <div class="choice-row">
+              <label><input type="radio" name="verifying_admin_type" value="President" /> President</label>
+              <label><input type="radio" name="verifying_admin_type" value="Provost" /> Provost</label>
+              <label><input type="radio" name="verifying_admin_type" value="Dean" checked data-testid="verifying-admin-dean" /> Dean</label>
+              <label><input type="radio" name="verifying_admin_type" value="Other top official" /> Other top official</label>
+            </div>
+          </fieldset>
+
+          <div class="grid two-col">
+            <label>
+              <span>Administrator name *</span>
+              <input type="text" name="verifying_admin_name" value="Pat Example" required data-testid="verifying-admin-name" />
+            </label>
+            <label>
+              <span>Administrator title *</span>
+              <input type="text" name="verifying_admin_title" value="Dean" required data-testid="verifying-admin-title" />
+            </label>
+            <label>
+              <span>Institution name *</span>
+              <input type="text" name="verification_institution_name" value="California State University--Long Beach" required data-testid="verification-institution-name" />
+            </label>
+            <label>
+              <span>Verification date *</span>
+              <input type="date" name="verification_date" value="2026-05-01" required data-testid="verification-date" />
+            </label>
+          </div>
+
+          <div class="grid two-col">
+            <label>
+              <span>Your name *</span>
+              <input type="text" name="submitter_name" value="Automation Tester" required data-testid="submitter-name" />
+            </label>
+            <label>
+              <span>Your title *</span>
+              <input type="text" name="submitter_title" value="Data Analyst" required data-testid="submitter-title" />
+            </label>
+          </div>
+
+          <div class="check-grid two-col verification-checks">
+            <label><input type="checkbox" name="verification_accuracy" data-testid="verification-accuracy" /> I verify that the survey responses are accurate.</label>
+            <label><input type="checkbox" name="verification_authorized" data-testid="verification-authorized" /> I confirm the senior administrator has authorized this verification.</label>
+            <label><input type="checkbox" name="analyst_review_complete" data-testid="analyst-review-complete" /> Analyst review is complete.</label>
+            <label><input type="checkbox" name="assessment_resolved" data-testid="assessment-resolved" /> All assessment flags are resolved.</label>
+          </div>
+
+          <div class="submission-panel card">
+            <div>
+              <h4>Submission Controls</h4>
+              <p>The final submit button stays disabled until required checkboxes are complete and the form validates successfully.</p>
+            </div>
+            <div class="button-stack horizontal">
+              <button type="button" id="submitForReview" class="primary" data-testid="submit-for-review">Submit for Review</button>
+              <button type="button" id="finalSubmit" class="success" disabled data-testid="final-submit">Final Submit</button>
+            </div>
+          </div>
+        </section>
+      </form>
+
+      <div class="footer-actions card">
+        <button type="button" id="prevSection" class="secondary" data-testid="prev-section">Previous</button>
+        <div class="footer-center">
+          <span id="autosaveStatus" data-testid="autosave-status">Autosave idle</span>
+        </div>
+        <button type="button" id="nextSection" class="primary" data-testid="next-section">Next</button>
+      </div>
+    </main>
+  </div>
+
+  <dialog id="toast" class="toast"></dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
