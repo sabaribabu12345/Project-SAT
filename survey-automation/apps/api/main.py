@@ -97,13 +97,19 @@ from apps.api.analyst_sql_mapping import AnalystSqlMappingService, DatabricksSer
 from apps.api.databricks_resolver import DatabricksSqlValueReader
 from apps.api.fill_preview import build_fill_preview
 from apps.api.operator_pages import data_points_page_html, fill_preview_js
+from apps.api.pdf_vision_api import router as pdf_vision_router
+from apps.api.pdf_vision_page import pdf_vision_ops_page_html
 from apps.api.schemas import FillPreviewResponse
 from apps.api.service import PdfDatapointService, PdfLabelEnrichmentFailedError, Slice1Service
 from apps.api.settings import Settings, get_settings
+from apps.api.website_automation_api import router as website_automation_router
+from apps.api.website_automation_page import website_automation_page_html
 from apps.skyvern_worker.skyvern_client import SkyvernClient
 from apps.temporal_worker.signaler import TemporalSignaler
 
 app = FastAPI(title="Survey Automation Control Plane", version="0.1.0")
+app.include_router(pdf_vision_router)
+app.include_router(website_automation_router)
 
 
 class FullWorkflowLaunchRequest(BaseModel):
@@ -673,6 +679,28 @@ def databricks_integration_status() -> dict[str, object]:
     }
 
 
+class BuildPdfPageContextRequest(BaseModel):
+    limit_pages: int | None = None
+    force: bool = False
+
+
+@app.post("/pdf-scans/{scan_id}/build-page-context")
+def build_pdf_page_context(
+    scan_id: str,
+    request: BuildPdfPageContextRequest,
+    session: Session = Depends(get_session),
+) -> dict[str, Any]:
+    service = PdfDatapointService(session)
+    try:
+        return service.build_pdf_page_context_cache(
+            scan_id=scan_id,
+            limit_pages=request.limit_pages,
+            force=request.force,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
 @app.post("/pdf-scans", response_model=PdfScanResponse)
 def create_pdf_scan(request: PdfScanRequest, session: Session = Depends(get_session)) -> PdfScanResponse:
     service = PdfDatapointService(session)
@@ -1168,6 +1196,7 @@ def resolve_pdf_scan_via_genie(
             batch_size=request.batch_size,
             min_confidence=request.min_confidence,
             force_regenie=request.force_regenie,
+            page_numbers=request.page_numbers,
         )
     except RuntimeError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -1770,7 +1799,9 @@ def _nav(active: str) -> str:
     links = [
         ("/data-points", "📊 Data Points"),
         ("/pdf-ops", "📄 PDF Flow"),
+        ("/pdf-vision-ops", "🖼️ PDF Vision"),
         ("/website-ops", "🌐 Web Fill"),
+        ("/website-automation", "🤖 Website Automation"),
     ]
     items = "".join(
         f'<a href="{href}" class="{"active" if href == active else ""}">{label}</a>'
@@ -2442,6 +2473,16 @@ def data_points_fill_preview(
 @app.get("/data-points", response_class=HTMLResponse)
 def data_points_page() -> str:
     return data_points_page_html(_SHARED_CSS, _SHARED_JS + fill_preview_js(), _nav("/data-points"))
+
+
+@app.get("/pdf-vision-ops", response_class=HTMLResponse)
+def pdf_vision_ops_page() -> str:
+    return pdf_vision_ops_page_html(_SHARED_CSS, _SHARED_JS, _nav("/pdf-vision-ops"))
+
+
+@app.get("/website-automation", response_class=HTMLResponse)
+def website_automation_page() -> str:
+    return website_automation_page_html(_SHARED_CSS, _SHARED_JS, _nav("/website-automation"))
 
 
 @app.get("/website-ops", response_class=HTMLResponse)

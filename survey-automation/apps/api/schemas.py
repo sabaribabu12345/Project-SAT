@@ -421,6 +421,7 @@ class GenieResolveRequest(BaseModel):
     batch_size: int = 50
     min_confidence: int = 60
     force_regenie: bool = False
+    page_numbers: list[int] | None = None
 
 
 class GenieResolutionResult(BaseModel):
@@ -587,3 +588,139 @@ class FilledPdfExportResponse(BaseModel):
     filled_count: int
     skipped_count: int
     missing_pdf_fields: list[str]
+
+
+class PdfVisionUploadResponse(BaseModel):
+    pdf_id: str
+    file_name: str
+    page_count: int
+    status: str
+    created_at: str
+
+
+class PdfVisionPageResponse(BaseModel):
+    page_id: str
+    pdf_id: str
+    page_number: int
+    image_url: str
+    status: str
+
+
+class PdfVisionProcessRequest(BaseModel):
+    survey_year: int = 2025
+
+
+class PdfVisionJobResponse(BaseModel):
+    job_id: str
+    pdf_id: str
+    status: str
+
+
+class PdfVisionJobStatusResponse(BaseModel):
+    job_id: str
+    pdf_id: str
+    status: str
+    created_at: str
+    started_at: str | None
+    finished_at: str | None
+    steps: list[dict[str, object]]
+    result: dict[str, object] | None
+    error: str | None
+
+
+class PdfVisionQuestionResponse(BaseModel):
+    question_id: str
+    page_number: int | None
+    display_id: str
+    question: str
+    answer_type: str
+    source_text: str
+    bounding_box: list[float] | None
+    matched_field_name: str
+    extraction_confidence: float
+    answer: str
+    sql: str
+    explanation: str
+    answer_confidence: int
+    status: str
+
+
+class QuestionEditRequest(BaseModel):
+    answer: str
+
+
+class QuestionRerunRequest(BaseModel):
+    survey_year: int = 2025
+
+
+class PdfVisionExportRequest(BaseModel):
+    output_file_path: str | None = None
+    flatten: bool = False
+
+
+class PdfVisionExportResponse(BaseModel):
+    pdf_id: str
+    source_file_path: str
+    output_file_path: str
+    download_url: str
+    filled_count: int
+    skipped_no_field_match: list[str]
+    missing_pdf_fields: list[str]
+
+
+class WebsiteStartRequest(BaseModel):
+    url: str
+
+
+class WebsiteSessionResponse(BaseModel):
+    session_id: str
+    url: str
+    status: str
+    current_page_number: int
+
+
+class WebsitePageResponse(BaseModel):
+    page_id: str
+    page_number: int
+    page_url: str
+    screenshot_url: str
+
+
+class WebsiteQuestionResponse(BaseModel):
+    question_id: str
+    page_number: int | None
+    detected_question: str
+    question_type: str
+    possible_answers: list[str]
+    matched_answer_id: str
+    matched_question_text: str
+    confidence: int
+    answer_used: str
+    status: str
+
+
+class WebsiteNextRequest(BaseModel):
+    button_text: str | None = None
+
+
+class WebsiteNextResponse(BaseModel):
+    clicked: bool
+    current_page_number: int
+
+
+class WebsiteStatusResponse(BaseModel):
+    session_id: str
+    url: str
+    status: str
+    current_page_number: int
+    questions_detected: int
+    questions_matched: int
+    questions_filled: int
+    questions_skipped: int
+    questions_failed: int
+    average_confidence: float
+
+
+class WebsiteQuestionOverrideRequest(BaseModel):
+    status: str | None = None
+    answer_used: str | None = None

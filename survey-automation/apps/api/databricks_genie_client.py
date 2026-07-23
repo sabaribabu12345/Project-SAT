@@ -523,17 +523,12 @@ class DatabricksGenieClient:
         host = (self._settings.databricks_host or "").strip()
         if not host:
             raise RuntimeError("DATABRICKS_HOST is required for Genie API")
-        token = self._effective_token()
         auth_type = (self._settings.databricks_auth_type or "").strip() or None
-        if token:
-            self._workspace_client = WorkspaceClient(
-                host=host,
-                token=token,
-                auth_type=auth_type or "pat",
-                product="survey-automation-v3",
-            )
-            self._configure_genie_http_timeouts(self._workspace_client)
-            return self._workspace_client
+
+        # Prefer explicit OAuth M2M credentials when configured. `_effective_token()`
+        # falls back to `openai_api_key`, which in OAuth M2M deployments is often a
+        # real (unrelated) OpenAI key used for Skyvern's LLM routing, not a Databricks
+        # token — passing that through would break auth, so client_id/secret wins.
         client_id = (self._settings.databricks_client_id or "").strip()
         client_secret = (self._settings.databricks_client_secret or "").strip()
         if client_id and client_secret:
@@ -542,6 +537,17 @@ class DatabricksGenieClient:
                 client_id=client_id,
                 client_secret=client_secret,
                 auth_type=auth_type or "oauth-m2m",
+                product="survey-automation-v3",
+            )
+            self._configure_genie_http_timeouts(self._workspace_client)
+            return self._workspace_client
+
+        token = self._effective_token()
+        if token:
+            self._workspace_client = WorkspaceClient(
+                host=host,
+                token=token,
+                auth_type=auth_type or "pat",
                 product="survey-automation-v3",
             )
             self._configure_genie_http_timeouts(self._workspace_client)

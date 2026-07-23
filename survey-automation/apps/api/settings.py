@@ -67,6 +67,15 @@ class Settings(BaseSettings):
     pdf_databricks_label_max_prompt_chars: int = 18000
     pdf_databricks_label_timeout_seconds: int = 45
 
+    pdf_vision_enabled: bool = False
+    pdf_vision_model: str = "gpt-4o"
+    pdf_vision_api_base: str = "https://api.openai.com/v1"
+    pdf_vision_api_key: str | None = None
+    pdf_vision_timeout_seconds: int = 120
+    pdf_vision_max_concurrent_pages: int = 1
+
+    website_match_confidence_threshold: int = 60
+
     browser_type: str = "chromium-headful"
     browser_remote_debugging_url: str | None = None
 

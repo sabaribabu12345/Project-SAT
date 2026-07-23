@@ -263,6 +263,100 @@ class AnalystSqlMappingDraft(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utc_now, nullable=False)
 
 
+class PdfPage(Base):
+    __tablename__ = "pdf_pages"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    pdf_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    page_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    image_path: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="PENDING")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utc_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utc_now, nullable=False)
+
+
+class ExtractedQuestion(Base):
+    __tablename__ = "extracted_questions"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    page_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    display_id: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    question: Mapped[str] = mapped_column(Text, nullable=False)
+    answer_type: Mapped[str] = mapped_column(String(32), nullable=False, default="text")
+    source_text: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    bounding_box_json: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    matched_field_name: Mapped[str] = mapped_column(String(256), nullable=False, default="")
+    confidence: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="EXTRACTED")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utc_now, nullable=False)
+
+
+class QuestionAnswer(Base):
+    __tablename__ = "question_answers"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    question_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    answer: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    sql_text: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    explanation: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    confidence: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="PENDING_REVIEW")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utc_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utc_now, nullable=False)
+
+
+class WebsiteSession(Base):
+    __tablename__ = "website_sessions"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    url: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="CREATED")
+    current_page_number: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utc_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utc_now, nullable=False)
+
+
+class WebsitePage(Base):
+    __tablename__ = "website_pages"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    session_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    page_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    screenshot_path: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    page_url: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utc_now, nullable=False)
+
+
+class WebsiteQuestion(Base):
+    __tablename__ = "website_questions"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    page_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    detected_question: Mapped[str] = mapped_column(Text, nullable=False)
+    question_type: Mapped[str] = mapped_column(String(32), nullable=False, default="text")
+    possible_answers_json: Mapped[str] = mapped_column(Text, nullable=False, default="[]")
+    matched_answer_id: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    matched_question_text: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    confidence: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    answer_used: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="DETECTED")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utc_now, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utc_now, nullable=False)
+
+
+class WebsiteAction(Base):
+    __tablename__ = "website_actions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    question_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    action: Mapped[str] = mapped_column(String(32), nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utc_now, nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="completed")
+    detail_json: Mapped[str] = mapped_column(Text, nullable=False, default="{}")
+
+
 class AnalystSqlFieldMapping(Base):
     __tablename__ = "analyst_sql_field_mappings"
 

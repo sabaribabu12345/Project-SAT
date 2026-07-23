@@ -47,6 +47,15 @@ class _FakeEmbeddingScorer:
         return 5
 
 
+class _DisabledEmbeddingScorer:
+    """Always unavailable — for tests asserting lexical/alias-only matching
+    behavior, which must not depend on ambient .env embedding credentials or
+    a live network call."""
+
+    def score_pair(self, left: str, right: str) -> int | None:
+        return None
+
+
 class _FakeGenieClient:
     configured = True
 
@@ -847,6 +856,7 @@ def test_scan_pdf_honors_label_enrichment_candidate_limit(monkeypatch) -> None:
 
 def test_suggests_master_datapoint_from_alias_overlap() -> None:
     service, session = _service_with_session()
+    service = PdfDatapointService(session, mapping_similarity_scorer=_DisabledEmbeddingScorer())
     try:
         session.add(
             SurveyPdfScan(
@@ -2195,7 +2205,7 @@ def test_cds_registry_uses_analyst_section_c_2025_query_patterns() -> None:
     assert c11 is not None
     rendered_c1 = apply_registry_year(c1.sql_template, 2025)
     rendered_c11 = apply_registry_year(c11.sql_template, 2025)
-    assert "TYLERN.GENDER" in rendered_c1
+    assert "GENDER_IDENTITY_CODE" in rendered_c1
     assert "RESIDENCE_CODE" in rendered_c1
     assert "CAST(A.YEARS AS INT) * 10 + CAST(A.TERM AS INT) = 20254" in rendered_c1
     assert "HS_GPA >= 400" in rendered_c11

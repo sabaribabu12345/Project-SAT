@@ -175,7 +175,7 @@ def build_run_body(
         "Do not inspect future sections unless none of the provided fields are visible.\n"
         "Start with the first visible section of the form.\n"
         "Fill only fields that match the provided field_name -> value mapping.\n"
-        "Prefer exact matches using input name, id, data-testid, aria-label, placeholder, visible label text, "
+        "Prefer exact matches using input field names, id, data-testid, aria-label, placeholder, visible labels, "
         "and nearby section headings.\n"
         "For each mapped value, set the matching input, select, textarea, radio group, or checkbox group.\n"
         "For checkbox arrays, ensure exactly the requested option text values are selected.\n"

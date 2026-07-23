@@ -1,5 +1,11 @@
 from __future__ import annotations
-
+from apps.api.pdf_page_context import (
+    PdfPageContext,
+    build_basic_page_context_from_candidates,
+    load_page_context,
+    page_context_paths,
+    render_pdf_page_to_png,
+)
 import json
 import re
 import uuid
@@ -471,60 +477,118 @@ def _catalog_input_kind(input_kind: str) -> str:
     return "text"
 
 
-def _chunked_list(items: list[Any], size: int) -> list[list[Any]]:
-    size = max(1, int(size))
-    return [items[index : index + size] for index in range(0, len(items), size)]
+def _decode_cds_pdf_field_name(field_name: str) -> str:
+    tokens = field_name.upper().split("_")
+    meanings = {
+        "CDS": "Common Data Set",
+        "EN": "enrollment",
+        "UG": "undergraduate",
+        "GRAD": "graduate",
+        "TOT": "total",
+        "DEG": "degree-seeking",
+        "CRDT": "credit-seeking / for credit",
+        "FT": "full-time",
+        "PT": "part-time",
+        "MEN": "men",
+        "WOMEN": "women",
+        "UNK": "unknown or another gender category",
+        "N": "count",
+        "AP": "admissions/applicants",
+        "RECD": "applications received",
+        "ADMT": "admitted",
+        "1ST": "first-time first-year",
+        "RES": "resident",
+        "NONRES": "nonresident",
+        "INTL": "international/nonresident",
+    }
+    return " / ".join(meanings.get(token, token.lower()) for token in tokens if token)
 
 
-def _build_genie_candidate_from_pdf_candidate(candidate: SurveyPdfDataPointCandidate) -> dict[str, Any]:
-    context_parts = []
+def _page_context_to_text(page_context: PdfPageContext | None) -> str:
+    if not page_context:
+        return ""
+
+    extracted = page_context.extracted_context or {}
+    labels = extracted.get("labels", [])
+    field_names = extracted.get("field_names", [])
+    nearby_samples = extracted.get("nearby_text_samples", [])
+
+    parts = [
+        f"Cached page context for page {page_context.page_number}: {page_context.page_summary[:500]}",
+    ]
+
+    if page_context.section_title:
+        parts.append(f"Section: {page_context.section_title[:200]}")
+
+    if page_context.table_titles:
+        parts.append(f"Tables: {', '.join(page_context.table_titles[:3])[:300]}")
+
+    if labels:
+        parts.append(f"Key labels on page: {', '.join(labels[:12])[:500]}")
+
+    if field_names:
+        parts.append(f"Key field names on page: {', '.join(field_names[:12])[:500]}")
+
+    if nearby_samples:
+        cleaned_samples = [" ".join(str(item).split())[:180] for item in nearby_samples[:3]]
+        parts.append(f"Nearby samples: {' | '.join(cleaned_samples)[:700]}")
+
+    return "\n".join(parts)[:2500]
+
+def _build_genie_candidate_from_pdf_candidate(
+    candidate: SurveyPdfDataPointCandidate,
+    page_context: PdfPageContext | None = None,
+) -> dict[str, Any]:
+    decoded_field_name = _decode_cds_pdf_field_name(candidate.field_name)
+    page_context_text = _page_context_to_text(page_context)
+
+    rich_label = (
+        f"{candidate.label_text or candidate.field_name} | "
+        f"PDF field: {candidate.field_name} | "
+        f"Meaning: {decoded_field_name}"
+    )
+
+    context_parts = [
+        f"PDF field name: {candidate.field_name}",
+        f"Decoded PDF field meaning: {decoded_field_name}",
+        f"Visible label: {candidate.label_text}",
+    ]
 
     if candidate.datapoint_intent:
-        context_parts.append(f"Datapoint intent: {candidate.datapoint_intent}")
+        context_parts.append(f"PDF datapoint intent: {candidate.datapoint_intent}")
 
     if candidate.nearby_text:
-        context_parts.append(f"Nearby PDF text: {candidate.nearby_text}")
+        context_parts.append(f"Field nearby PDF/table text: {candidate.nearby_text}")
 
     if candidate.candidate_key:
         context_parts.append(f"PDF candidate key: {candidate.candidate_key}")
 
-    if candidate.field_name:
-        context_parts.append(f"PDF field name: {candidate.field_name}")
-
     if candidate.page_number:
         context_parts.append(f"PDF page number: {candidate.page_number}")
 
-    context_parts.append(
-        "Important: The visible label alone may be incomplete because this field may be inside a table. "
-        "Use the PDF field name, candidate key, nearby text, row/column context, and datapoint intent together."
-    )
+    if page_context_text:
+        context_parts.append(page_context_text)
 
-    rich_nearby_text = "\n".join(context_parts)
+    context_parts.append(
+        "Instructions: This is a Common Data Set PDF field. "
+        "The visible label may be repeated or incomplete because this field may be inside a table. "
+        "Use field name, decoded meaning, nearby text, and page context together. "
+        "For enrollment, avoid duplicate row counting; prefer official headcount or distinct student count when needed. "
+        "Return the value for this exact field."
+    )
+    rich_context = "\n".join(part for part in context_parts if part)
+    rich_context = rich_context[:3500]
 
     return {
         "candidate_id": candidate.candidate_id,
         "field_name": candidate.field_name,
-        "label_text": f"{candidate.label_text or ''} | PDF field: {candidate.field_name}".strip(" |"),
-        "nearby_text": rich_nearby_text,
+        "label_text": rich_label[:1000],
+        "nearby_text": rich_context,
         "page_number": candidate.page_number or 1,
         "field_type": candidate.input_kind or "text",
         "options": [],
     }
 
-def _apply_genie_result_to_pdf_candidate(candidate: SurveyPdfDataPointCandidate, result: Any) -> None:
-    now = _utc_now()
-
-    candidate.genie_sql_template = result.sql_template or ""
-    candidate.genie_table = result.table or ""
-    candidate.genie_column = result.column or ""
-    candidate.genie_year_column = result.year_column or ""
-    candidate.genie_value = "" if result.value is None else str(result.value)
-    candidate.genie_confidence = int(result.confidence or 0)
-    candidate.genie_reason = result.reason or ""
-    candidate.genie_resolved_at = now
-    candidate.status = "GENIE_RESOLVED"
-    candidate.updated_at = now
-    
 class PdfDatapointService:
     def __init__(
         self,
@@ -1348,121 +1412,6 @@ class PdfDatapointService:
             master_data_point_id=draft.master_data_point_id,
             binding_applied=binding_applied,
         )
-    def resolve_pdf_scan_via_genie(
-        self,
-        *,
-        scan_id: str,
-        survey_year: int,
-        batch_size: int = 10,
-        min_confidence: int = 0,
-        force_regenie: bool = False,
-    ) -> dict[str, Any]:
-        self.get_pdf_scan(scan_id)
-
-        batch_size = max(1, min(25, int(batch_size)))
-        min_confidence = max(0, min(100, int(min_confidence)))
-
-        candidates = self.list_pdf_candidates(scan_id)
-
-        selected_candidates: list[SurveyPdfDataPointCandidate] = []
-        for candidate in candidates:
-            if not candidate.field_name.strip():
-                continue
-
-            if not force_regenie:
-                if candidate.status == "GENIE_RESOLVED" and candidate.genie_value:
-                    continue
-                if candidate.genie_value and candidate.genie_sql_template:
-                    continue
-
-            selected_candidates.append(candidate)
-
-        resolved_count = 0
-        unresolved_count = 0
-        low_confidence_count = 0
-        failed_count = 0
-        batches = 0
-        errors: list[str] = []
-
-        for batch in _chunked_list(selected_candidates, batch_size):
-            batches += 1
-
-            genie_candidates = [
-                _build_genie_candidate_from_pdf_candidate(candidate)
-                for candidate in batch
-            ]
-
-            try:
-                results = self._genie_mapping_client.resolve_many_candidates(
-                    candidates=genie_candidates,
-                    survey_year=survey_year,
-                )
-            except Exception as exc:  # noqa: BLE001
-                error_message = str(exc)
-                errors.append(error_message)
-                failed_count += len(batch)
-
-                now = _utc_now()
-                for candidate in batch:
-                    candidate.status = "GENIE_FAILED"
-                    candidate.genie_reason = error_message
-                    candidate.updated_at = now
-
-                self._session.commit()
-                continue
-
-            now = _utc_now()
-
-            for candidate in batch:
-                result = (
-                    results.get(candidate.candidate_id)
-                    or results.get(candidate.field_name)
-                    or results.get(candidate.field_name.upper())
-                    or results.get(candidate.field_name.lower())
-                )
-
-                if not result:
-                    unresolved_count += 1
-                    candidate.status = "GENIE_UNRESOLVED"
-                    candidate.genie_reason = "No Genie result returned for candidate"
-                    candidate.updated_at = now
-                    continue
-
-                confidence = int(result.confidence or 0)
-
-                if min_confidence and confidence < min_confidence:
-                    low_confidence_count += 1
-                    candidate.status = "GENIE_LOW_CONFIDENCE"
-                    candidate.genie_sql_template = result.sql_template or ""
-                    candidate.genie_table = result.table or ""
-                    candidate.genie_column = result.column or ""
-                    candidate.genie_year_column = result.year_column or ""
-                    candidate.genie_value = "" if result.value is None else str(result.value)
-                    candidate.genie_confidence = confidence
-                    candidate.genie_reason = result.reason or "Low confidence Genie result"
-                    candidate.genie_resolved_at = now
-                    candidate.updated_at = now
-                    continue
-
-                _apply_genie_result_to_pdf_candidate(candidate, result)
-                resolved_count += 1
-
-            self._session.commit()
-
-        return {
-            "scan_id": scan_id,
-            "survey_year": survey_year,
-            "batch_size": batch_size,
-            "candidate_count": len(candidates),
-            "attempted_count": len(selected_candidates),
-            "resolved_count": resolved_count,
-            "unresolved_count": unresolved_count,
-            "low_confidence_count": low_confidence_count,
-            "failed_count": failed_count,
-            "batches": batches,
-            "errors": errors,
-        }
-
     def resolve_mapped_pdf_scan(
         self,
         *,
@@ -1734,7 +1683,97 @@ class PdfDatapointService:
     # ------------------------------------------------------------------
     # Genie-first value resolution
     # ------------------------------------------------------------------
+    def build_pdf_page_context_cache(
+        self,
+        *,
+        scan_id: str,
+        limit_pages: int | None = None,
+        force: bool = False,
+    ) -> dict[str, Any]:
+        scan = self.get_pdf_scan(scan_id)
+        candidates = self.list_pdf_candidates(scan_id)
+        
 
+        candidates_by_page: dict[int, list[SurveyPdfDataPointCandidate]] = {}
+        for candidate in candidates:
+            page_number = candidate.page_number or 1
+            candidates_by_page.setdefault(page_number, []).append(candidate)
+
+        page_numbers = sorted(candidates_by_page.keys())
+        if limit_pages is not None:
+            page_numbers = page_numbers[: max(1, int(limit_pages))]
+
+        created_count = 0
+        reused_count = 0
+        failed_count = 0
+        pages: list[dict[str, Any]] = []
+        errors: list[str] = []
+
+        for page_number in page_numbers:
+            try:
+                existing = load_page_context(
+                    scan_id=scan_id,
+                    page_number=page_number,
+                    base_dir=self._settings.pdf_upload_dir,
+                )
+
+                if existing and not force:
+                    reused_count += 1
+                    pages.append(
+                        {
+                            "page_number": page_number,
+                            "status": "reused",
+                            "image_path": existing.image_path,
+                            "context_json_path": existing.context_json_path,
+                            "field_count": len(candidates_by_page[page_number]),
+                        }
+                    )
+                    continue
+
+                image_dir, _context_path = page_context_paths(
+                    scan_id=scan_id,
+                    page_number=page_number,
+                    base_dir=self._settings.pdf_upload_dir,
+                )
+
+                image_path = render_pdf_page_to_png(
+                    pdf_path=scan.file_path,
+                    page_number=page_number,
+                    output_dir=str(image_dir),
+                )
+
+                context = build_basic_page_context_from_candidates(
+                    scan_id=scan_id,
+                    page_number=page_number,
+                    image_path=image_path,
+                    candidates=candidates_by_page[page_number],
+                    base_dir=self._settings.pdf_upload_dir,
+                )
+
+                created_count += 1
+                pages.append(
+                    {
+                        "page_number": page_number,
+                        "status": "created",
+                        "image_path": context.image_path,
+                        "context_json_path": context.context_json_path,
+                        "field_count": len(candidates_by_page[page_number]),
+                    }
+                )
+
+            except Exception as exc:  # noqa: BLE001
+                failed_count += 1
+                errors.append(f"page {page_number}: {exc}")
+
+        return {
+            "scan_id": scan_id,
+            "page_count": len(page_numbers),
+            "created_count": created_count,
+            "reused_count": reused_count,
+            "failed_count": failed_count,
+            "pages": pages,
+            "errors": errors,
+        }
     def resolve_pdf_scan_via_genie(
         self,
         *,
@@ -1743,6 +1782,7 @@ class PdfDatapointService:
         batch_size: int = 50,
         min_confidence: int = 60,
         force_regenie: bool = False,
+        page_numbers: list[int] | None = None,
     ) -> dict[str, Any]:
         from apps.api.databricks_genie_client import DatabricksGenieClient, GenieResolution
         from apps.api.databricks_resolver import DatabricksSqlValueReader
@@ -1754,6 +1794,14 @@ class PdfDatapointService:
                 .order_by(SurveyPdfDataPointCandidate.nearby_text, SurveyPdfDataPointCandidate.field_name)
             ).scalars()
         )
+
+        if page_numbers:
+            allowed_pages = set(page_numbers)
+            candidates = [
+                candidate
+                for candidate in candidates
+                if candidate.page_number in allowed_pages
+            ]
 
         registry = CdsQueryRegistry.default()
         registry_groups: dict[Any, list[SurveyPdfDataPointCandidate]] = {}
@@ -1823,14 +1871,24 @@ class PdfDatapointService:
                 # Batch by size within each section
                 for batch_start in range(0, len(group), batch_size):
                     batch = group[batch_start : batch_start + batch_size]
+
+                    page_context_by_page_number: dict[int, PdfPageContext | None] = {}
+                    for c in batch:
+                        page_number = c.page_number or 1
+                        if page_number not in page_context_by_page_number:
+                            page_context_by_page_number[page_number] = load_page_context(
+                                scan_id=scan_id,
+                                page_number=page_number,
+                                base_dir=self._settings.pdf_upload_dir,
+                            )
+
                     genie_payload = [
                         {
-                            "candidate_id": c.candidate_id,
-                            "field_name": c.field_name,
+                            **_build_genie_candidate_from_pdf_candidate(
+                                c,
+                                page_context=page_context_by_page_number.get(c.page_number or 1),
+                            ),
                             "section": section,
-                            "label_text": c.label_text,
-                            "datapoint_intent": c.datapoint_intent,
-                            "context": c.nearby_text,
                         }
                         for c in batch
                     ]
@@ -1974,43 +2032,25 @@ class PdfDatapointService:
         )
         values_by_field = {row.field_name: row.genie_value for row in rows}
 
-        reader = PdfReader(str(source_path))
-        pdf_fields = reader.get_fields() or {}
-        available_fields = set(pdf_fields.keys())
-        fill_values = {
-            field_name: value
-            for field_name, value in values_by_field.items()
-            if field_name in available_fields
-        }
-        missing_pdf_fields = sorted(field_name for field_name in values_by_field if field_name not in available_fields)
-
         if output_file_path:
             output_path = Path(output_file_path)
         else:
             export_dir = Path(self._settings.pdf_export_dir)
             output_name = f"{scan.scan_id}_{source_path.stem}_resolved.pdf"
             output_path = export_dir / output_name
-        output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        writer = PdfWriter()
-        writer.append(reader)
-        if hasattr(writer, "set_need_appearances_writer"):
-            writer.set_need_appearances_writer(True)
-        for page in writer.pages:
-            writer.update_page_form_field_values(
-                page,
-                fill_values,
-                auto_regenerate=True,
-                flatten=flatten,
-            )
-        with output_path.open("wb") as handle:
-            writer.write(handle)
+        filled_count, missing_pdf_fields = fill_pdf_acroform_fields(
+            source_path=source_path,
+            values_by_field=values_by_field,
+            output_path=output_path,
+            flatten=flatten,
+        )
 
         return FilledPdfExportResult(
             scan_id=scan_id,
             source_file_path=str(source_path),
             output_file_path=str(output_path),
-            filled_count=len(fill_values),
+            filled_count=filled_count,
             skipped_count=len(missing_pdf_fields),
             missing_pdf_fields=missing_pdf_fields,
         )
@@ -2032,6 +2072,47 @@ class PdfDatapointService:
             if candidate.exists() and candidate.is_file():
                 return candidate
         return None
+
+
+def fill_pdf_acroform_fields(
+    *,
+    source_path: Path,
+    values_by_field: dict[str, str],
+    output_path: Path,
+    flatten: bool = False,
+) -> tuple[int, list[str]]:
+    """Fill AcroForm fields on source_path by field_name, write to output_path.
+
+    Returns (filled_count, missing_pdf_fields), where missing_pdf_fields lists
+    field_names in values_by_field that don't exist in the source PDF's AcroForm.
+    """
+    reader = PdfReader(str(source_path))
+    pdf_fields = reader.get_fields() or {}
+    available_fields = set(pdf_fields.keys())
+    fill_values = {
+        field_name: value
+        for field_name, value in values_by_field.items()
+        if field_name in available_fields
+    }
+    missing_pdf_fields = sorted(field_name for field_name in values_by_field if field_name not in available_fields)
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    writer = PdfWriter()
+    writer.append(reader)
+    if hasattr(writer, "set_need_appearances_writer"):
+        writer.set_need_appearances_writer(True)
+    for page in writer.pages:
+        writer.update_page_form_field_values(
+            page,
+            fill_values,
+            auto_regenerate=True,
+            flatten=flatten,
+        )
+    with output_path.open("wb") as handle:
+        writer.write(handle)
+
+    return len(fill_values), missing_pdf_fields
 
 
 def _extract_section_from_nearby_text(nearby_text: str) -> str:
